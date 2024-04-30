@@ -145,6 +145,33 @@ function freeze.open(filename)
 	end
 end
 
+function freeze.copy(filename)
+	-- Check if Linux and then for Wayland/X11
+	if vim.api.system.get_os() == "Linux" then
+		-- Check for Wayland using environment variable
+		if vim.env.WAYLAND_DISPLAY ~= nil then
+			print("Wayland is being used")
+		else
+			-- Check for X11 using loginctl (more reliable)
+			local session_type = vim.api.nvim_exec("loginctl show-session -p Type $(whoami)", true)
+			if session_type == "wayland" then
+				print("Wayland (through XWayland)")
+			else
+				print("X11 is being used")
+			end
+		end
+	elseif vim.api.system.get_os() == "Windows" then
+		-- Code for Linux
+		print("Windows detected")
+	elseif vim.api.system.get_os() == "OSX" then
+		-- Code for macOS
+		print("macOS detected")
+	else
+		-- Code for other operating systems
+		print("Unknown OS")
+	end
+end
+
 --- Setup function for enabling both user commands.
 --- Sets up :Freeze for freezing a selection and :FreezeLine
 --- to freeze a single line.
@@ -157,6 +184,7 @@ function freeze.setup(plugin_opts)
 			freeze.freeze(opts.line1, opts.line2)
 		else
 			freeze.freeze(1, vim.api.nvim_buf_line_count(0))
+			freeze.copy("")
 		end
 	end, { range = true })
 	vim.api.nvim_create_user_command("FreezeLine", function(_)
